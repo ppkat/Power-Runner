@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Créditos</title>
+	<meta charset="utf-8">
+	<meta http-equiv="refresh" content="1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style type="text/css">
+
+		*{
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body{
+			size: 100%;
+			background-color: gray;
+			font-size: 50px;
+			text-align: center;
+		}
+		a{
+			text-decoration: none;
+			color: white;
+		}
+		.divis{
+			box-sizing: border-box;
+			width: 400px;
+			height: 250px;
+			background-color: #090ded;
+			margin: 15px;
+			padding-top: 5.7%;
+			border-radius: 30px;
+			/*float: right;*/
+		}
+		#conteudo{
+			width: 90%;
+			height: 100%;
+			background-color: red;
+			margin: 2.5%;
+			border: solid 50px red;
+			position: relative;
+		}
+		#voltar{
+			width: 300px; height: 70px;
+			background-color: yellow;
+			position: absolute;
+			left: 40%;
+			top: -45px;
+			border-radius: 30px;
+		}
+		#voltar:hover {width: 330px; height: 80px; padding: 10px; box-sizing: border-box; transition-duration: 0.5s; transition-delay: 0.1s}
+		.meio{
+			/*float: left;*/
+		}
+	</style>
+</head>
+<body>
+	<div id="conteudo">
+		<div class="divis"> <a href="https://opengameart.org/content/pixel-night-city">Background</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/antifareas-rpg-sprite-set-1-enlarged-w-transparent-background-fixed">Character</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/floor-tiles">Floor</a></div>
+		<div class="divis meio"><a href="https://opengameart.org/content/i-are-spaceship-16x16-space-sprites">Meteour</a></div>
+		<div class="divis meio"><a href="https://opengameart.org/content/dance-field">Main soundtrack</a></div>
+		<div class="divis meio"><a href="https://opengameart.org/content/invasion-of-electro-aliens">Sondtrack 2</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/one-day-in-the-electro-house-sayamor">Soundtrack 3</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/explosion-3">Explosion art</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/explosion-0">Explosion sound</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/spell-sounds-starter-pack">Energy sound</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/life-pickup-yo-frankie">Green Buff sound</a></div>
+		<div class="divis"><a href="https://opengameart.org/content/insect-or-alien-scream-short">Red Buff sound</a></div>
+		<div id="voltar" onclick="voltar()">Back</div>
+	</div>
+	<script type="text/javascript">
+		function voltar() {
+			window.location.href = "index.html";
+		}
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Power Runner</title>
+	<meta charset="utf-8">
+	<!--<meta http-equiv="refresh" content="1">-->
+	<style type="text/css">
+
+		*{
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+    	 }
+
+    	body{
+			width: 100%;
+			min-height: 100vh;
+		}
+
+		canvas{
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			margin: auto;
+		}
+
+	</style>
+	<script src="sprite.js"></script>
+</head>
+<body>
+	<div id="telaInicial">
+		<div id="startar">
+			<label id="palavraStart"></label>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		
+		var altura = window.innerHeight, largura = window.innerWidth, cnv, ctx, estadoAtual, record, imagemBase, background, muroBase, metal, chaoBase2, lua, meteour, pesoleveaumentadoimg, personagem,
+		velocimetroimg, colunamarelaimg, colunameteourimg, colunarosaimg, touchev, touchtop, toouchbot, touchleft, touchright;
+		var moveEsquerda = moveDireita = moveBaixo = false, mobileversion;
+		var maximoDePulos = 3, speed = 8, esseContador = 0, contadorN1 = 10, contadorN2 = 700, ContadorSpeed = 0, ContadorVelocidade = 0, ContadorPulo = 0, contadorAnima = 21;
+		var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
+		var diminuicaoGrav = 0.025, aumentoGrav = 0.025;
+		var contadorN4 = 120,  contadorN3 = 540, contadorUMniversal = 0, rosAtivo = false, inversoAtivo = false, meteorAtivo = false, bateuRecord = false;
+		ativemusic = true, ativesounds = true;
+		//unidades de medida
+		var chaoTam = 64, centesimoLar = largura/100, centesimoAlt = altura/100;
+		//contadores (tem alguns em cima tb)
+		var contadorDesenho = 32, tamanhoDesenho = 0, contadorPrejeteisAereos = 601, continuetostatic = 1, contadornovo1, contadornovo2, contadornovo3, contadornovo4, contadornovo5, contadornovo6;
+		//variaveis dos personagens e desenhos
+		var origemX = 4, luaX = 0, origemExplosionX = 0;
+		var origemY = 38, luaY = 10, contluaY =0, origemExplosionY = 0;
+		var imgAltura = 34, explosionAltura = 32;
+		var imgLargura = 27, backgroundX = 0; explosionLargura = 32;
+		// tela perdeu
+		var btnVermelhoX = largura/2 - 75;
+		var btnVermelhoY = altura/2 - 75;
+		var btnVermelhoLar = 150;
+		var btnVermelhoAlt = 150;
+
+		if(mobileversion == true) speed = 5;
+
+		var skins = {
+			warriorM: 1,
+			rangerM: 2,
+			rangerF: 3,
+			ninjaM: 4,
+			ninjaF: 5,
+			mageM: 6,
+			mageF: 7,
+			healerM: 8,
+			healerF: 9,
+			warriorF: 10,
+			townfolkM: 11,
+			townfolkF: 12
+
+		};
+
+		var chao = {
+			alturA: chaoTam,
+			y: altura - chaoTam,
+			blocos: [],
+			x: 0,
+
+			desenha: function(){
+			//	if(estadoAtual == estados.jogando){			
+					this.x-= speed;
+					if(this.x + largura <= 0){
+						this.x = -1;
+					}
+			//	}
+				for(var j = 0; j < cnv.width; j += chaoTam){
+					ctx.drawImage(chaoBase2, 32, 0, 32, 32, j + this.x, cnv.height - this.alturA, chaoTam, chaoTam);
+					ctx.drawImage(chaoBase2, 32, 0, 32, 32, j + this.x + largura, cnv.height - this.alturA, chaoTam, chaoTam);
+				}
+			}
+		};
+
+		var estados = {
+			jogar: 0,
+			jogando: 1,
+			perdeu: 2
+		}
+
+		var bloquinnho = {
+			x: 250,
+			y: 640, 
+			largura: 40,
+			altura: 60,
+			cor: "#f11",
+			gravidade: 0.5,
+			velocidadeGrav: 0,
+			pulo: 10,
+			qntPulos: 0,
+			score: 0,
+			tamnhador: 0,
+			contadorNegPos: 0,
+			velocidade: 6,
+
+			atualiza: function(){
+				if (estadoAtual == estados.jogando) {
+					bloquinnho.animation();
+				}
+
+				this.velocidadeGrav += this.gravidade;
+				this.y += this.velocidadeGrav;
+
+				if (this.y > chao.y - this.altura) {
+					this.y = chao.y - this.altura;
+					this.velocidadeGrav = 0;
+
+					this.qntPulos = 0;
+				}
+
+				//contadores*%*%*%*%*%*%*%*%*%%*%*%*%*%*%%*%*%*%
+
+				//contador do rosachok
+				if (contadorN3 == 0) {
+					contadorN3 = 540;
+					this.velocidade = 6 + ContadorVelocidade;
+					this.pulo = 10 + ContadorPulo;
+					maximoDePulos = 3;
+					bloquinnho.cor = "#f11";
+					rosAtivo = false;
+					sondtrack.tomain();
+					sondtrack.outrosa();
+				}
+				if (contadorN3 < 540 && contadorN3 > 0) {
+					contadorN3--;
+				}
+
+				//contador do inverso
+				if (contadorN4 == 0) {
+					contadorN4 = 120;
+					this.velocidade = 6 + ContadorVelocidade;
+					inversoAtivo = false;
+				}
+				if(contadorN4 < 120 && contadorN3 > 0){
+					contadorN4--;
+				}
+
+				//contador dos meteoros
+				if (contadorN2 < 700 && contadorN2 > 0) {
+					contadorN2--;
+				}
+
+				//normalizadores %*%*%*%$*%*%*%*%*%*$*%*$*%*$*%$*%
+				//NORMALIZADOR meteoros
+				if (contadorN2 == 0) {
+					contadorN2 = 700;
+					maximoDePulos = 3;
+					meteorAtivo = false;
+					buffs.velocidade = 2;
+					contadorPrejeteisAereos = 601;
+					sondtrack.outmeteours();
+					sondtrack.tomain();
+				}
+				if (contadorN2 == 90) {
+					contadorN1 = 10;
+					if(mobileversion == false){
+						obstaculos.halturamax = 170;
+					}else{obstaculos.halturamax = 120}
+				}
+
+				//caso ele saia da tela a esquerda
+				if(bloquinnho.x + bloquinnho.largura/2 < 0){
+					bloquinnho.x = 0 - bloquinnho.largura/2;
+				}
+
+			},
+
+			pula: function(){
+				if(this.qntPulos < maximoDePulos){
+					puloaud.play();
+					this.velocidadeGrav = - this.pulo;
+					this.qntPulos++;
+				}
+			},
+
+			animation: function(){
+				if(moveEsquerda){
+					contadorAnima-= speed/8 - this.velocidade/12;
+				}else if(moveDireita){
+					contadorAnima-= speed/8 + this.velocidade/12;
+				}else{
+					contadorAnima-= speed/8;
+				}
+
+				if (contadorAnima <= 0)
+					contadorAnima = 21;
+				
+				if (contadorAnima >=14){
+					origemX = 4;
+				}
+				if (contadorAnima >=7 && contadorAnima < 14){
+					origemX = 36; // certo
+					origemY = 36;
+					imgAltura = 32;
+				}
+				if (contadorAnima >= 0 && contadorAnima < 7){
+					origemX = 68; //certo
+					origemY = 38;
+					imgAltura = 34;
+				}
+
+			},
+
+			desenha: function(){
+
+				if(personagem == skins.warriorM)
+					ctx.drawImage(imagemBase, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.warriorF)
+					ctx.drawImage(warriorFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.rangerM)
+					ctx.drawImage(rangerMimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.rangerF)
+					ctx.drawImage(rangerFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.ninjaM)
+					ctx.drawImage(ninjaMimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.ninjaF)
+					ctx.drawImage(ninjaFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.mageM)
+					ctx.drawImage(mageMimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.mageF)
+					ctx.drawImage(mageFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.healerM)
+					ctx.drawImage(healerMimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.healerF)
+					ctx.drawImage(healerFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.townfolkM)
+					ctx.drawImage(townfolkMimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+				else if(personagem == skins.townfolkF)
+					ctx.drawImage(townfolkFimg, origemX, origemY, imgLargura, imgAltura, this.x, this.y, this.largura + 10, this.altura);
+			},
+
+			reset: function(){
+				if (rosAtivo == false && inversoAtivo == false) {
+					this.gravidade = 0.5;
+					this.pulo = 10;
+					this.altura = 60;
+					this.largura = 40;
+					esseContador = 0;
+					this.velocidade = 6 + ContadorVelocidade;
+					this.contadorNegPos = 0;
+					if(mobileversion == false){
+						speed = 8 + ContadorSpeed;
+					}else{speed = 5 + ContadorSpeed}
+					bloquinnho.cor == "#f11";
+				}
+				if(inversoAtivo == false && rosAtivo == true){
+					this.gravidade = 0.5;
+					this.pulo = (10)*1.3;
+					this.altura = 60;
+					this.largura = 40;
+					esseContador = 0;
+					this.velocidade = (6 + ContadorVelocidade)*1.4;
+					this.contadorNegPos = 0;
+					if(mobileversion == false){
+						speed = 8 + ContadorSpeed;
+					}else{speed = 5 + ContadorSpeed}
+				}
+				if(inversoAtivo == true && rosAtivo == false){
+					this.gravidade = 0.5;
+					this.pulo = 10;
+					this.altura = 60;
+					this.largura = 40;
+					esseContador = 0;
+					this.velocidade = -6 - ContadorVelocidade;
+					this.contadorNegPos = 0;
+					if(mobileversion == false){
+						speed = 8 + ContadorSpeed;
+					}else{speed = 5 + ContadorSpeed}
+				}
+			},
+
+			morreu: function(){
+				obstaculos.limpa();
+				buffs.limpa();
+				megaObstaculos.limpa();
+				projeteisAereos.limpa();
+				this.reset();
+				this.gravidade = -1;
+				this.velocidade = 6;
+				buffs.velocidade = 2;
+				contadorN2 = 700;
+				ContadorSpeed = 0;
+				ContadorVelocidade = 0;
+				ContadorPulo = 0;
+				contadorPrejeteisAereos = 601;
+				megaObstaculos.contadorN1 = 8000;
+				bloquinnho.cor = "#f11";
+				contadorUMniversal = 0;
+				maximoDePulos = 3;
+				bloquinnho.pulo = 10;
+				contadorN3 = 540;
+				contadorN4 = 0;
+				inversoAtivo = false;
+				rosAtivo = false;
+				contadorN1 = 10;
+				if(mobileversion == false){
+						obstaculos.halturamax = 170;
+					}else{obstaculos.halturamax = 120}
+				sondtrack.outrosa();
+				sondtrack.outmain();
+				sondtrack.outmeteours();
+
+			},
+			//funções de buff
+			pesoAumentado: function() {
+				redbuffaud.load();
+				redbuffaud.play();
+				if (this.contadorNegPos <= 0) {
+					if (this.contadorNegPos <=0 && this.contadorNegPos >= -2) {
+						this.gravidade += aumentoGrav;
+						this.pulo += 0.25;
+						ContadorPulo += 0.25;
+						this.altura -= 10;
+						this.largura -= 10;
+						esseContador -= 2;
+						this.contadorNegPos--;
+						speed -= 0.4;
+
+					}else{
+						if (this.contadorNegPos == -3) {
+							this.gravidade += aumentoGrav;
+							this.pulo += 0.25;
+							ContadorPulo += 0.25;
+							this.largura = 9;
+							this.altura = 20;
+							esseContador -= 2;
+							this.contadorNegPos--;
+							speed -= 0.4;
+						}else{
+							if (this.contadorNegPos == -4) {
+								this.gravidade += aumentoGrav;
+								this.pulo += 0.25;
+								ContadorPulo += 0.25;
+								this.largura = 8;
+								this.altura = 10;
+								esseContador -= 2;
+								this.contadorNegPos--;
+								speed -= 0.4;
+							}else{
+								if (this.contadorNegPos == -5) {
+									this.gravidade += aumentoGrav;
+									this.pulo += 0.25;
+									ContadorPulo += 0.25;
+									this.largura = 4;
+									this.altura = 4;
+									esseContador -= 2;
+									this.contadorNegPos--;
+									speed -= 0.4;
+								}else{
+									if (this.contadorNegPos <= -6) {
+										this.gravidade += aumentoGrav;
+										this.pulo += 0.26;
+										ContadorPulo += 0.26;
+										esseContador -= 2;
+										this.contadorNegPos--;
+										speed -= 0.4;
+									}
+								}
+							}
+						}	
+					}
+				}else{
+					this.reset();
+				}	
+							
+			},
+			
+			pesoLeve: function() {
+				grenbuffaud.load();
+				grenbuffaud.play();
+				if (this.contadorNegPos >= 0) {
+					this.gravidade -= diminuicaoGrav;
+					this.pulo -= 0.26;
+					ContadorPulo -= 0.26;
+					this.altura += 10;
+					this.largura += 10;
+					esseContador += 2;
+					this.contadorNegPos++;
+					speed +=0.4;
+				}else{
+					this.reset();
+				 }
+			},
+
+			velocimetro: function(){
+				velocimetroaud.load();
+				velocimetroaud.play();
+				this.velocidade += 0.5;
+				ContadorVelocidade += 0.5;
+				this.score++;
+				this.qntPulos--;
+				this.pula();
+			},
+
+			meteoros: function(){
+				contadorN2--;
+				contadorPrejeteisAereos--;
+				if (contadorN2 > 90 && contadorN2 < 700) {
+					maximoDePulos = 5;
+					buffs.velocidade = 6;
+					contadorN1 = 140;
+					if(mobileversion == false){
+						obstaculos.halturamax = 210;
+					}else{obstaculos.halturamax = 150}
+					contadorUMniversal = 1000;
+					sondtrack.tometeours();
+					sondtrack.outmain();
+					meteorAtivo = true;
+				}
+			},
+
+			rosaChok: function(){
+				contadorN3--;
+				if (contadorN3 > 0 && contadorN3 < 540) {
+					this.velocidade = (6 + ContadorVelocidade)*1.4;
+					this.pulo = (10 + ContadorPulo)*1.3;
+					maximoDePulos = 2;
+					contadorUMniversal = 540;
+					bloquinnho.cor = "#ff00d0";
+					rosAtivo = true;
+					sondtrack.torosa();
+					sondtrack.outmain();
+				}
+				
+			},
+
+			inverso: function(){
+				contadorN4--;
+				if (contadorN4 > 0 && contadorN4 < 120) {
+					this.velocidade = -6 - ContadorVelocidade;
+					bloquinnho.cor = "#0b6b23";
+					inversoAtivo = true;
+				}
+			}
+		}
+
+		var obstaculos = {
+
+			obs: [],
+			cores: ["#00aaff","#54ff00","#ff0000","#54ff00","#ff0000","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff","#00aaff"],
+			tempoInsere: 0,
+			halturamax: 170, //170
+			aparecer: function(){
+				if(mobileversion == true) this.halturamax = 120;
+				this.obs.push({
+					x: largura,
+					LARGURA: 30 + Math.floor(11 * Math.random()),
+					altura: this.halturamax + Math.floor(101 * Math.random()), //altura max: 270. 170 + 0-100
+					cor: this.cores[Math.floor(20 * Math.random())] //20
+				})
+				this.tempoInsere = 100 + esseContador - Math.floor(34 * Math.random());
+			},
+
+			atualiza: function(){
+				if (this.tempoInsere == 0) {
+					this.aparecer()
+				}else{
+					this.tempoInsere--;
+				}
+				for (var i = 0, tam = this.obs.length; i < tam; i++) {
+					var obstac = this.obs[i];
+					obstac.x -= speed;
+						//parte das cores dos obstáculos
+					if(obstac.cor == "#00aaff"){
+						if (bloquinnho.x < obstac.x + obstac.LARGURA && bloquinnho.x + bloquinnho.largura >= obstac.x && bloquinnho.y + bloquinnho.altura >= chao.y - obstac.altura) {
+						estadoAtual = estados.perdeu;
+						morreaud.play();
+						}
+					}
+
+					if(obstac.cor == "#54ff00"){
+						if (bloquinnho.x < obstac.x + obstac.LARGURA && bloquinnho.x + bloquinnho.largura >= obstac.x && bloquinnho.y + bloquinnho.altura >= chao.y - obstac.altura){
+								bloquinnho.pesoLeve();
+								bloquinnho.tamnhador++;
+								this.obs.splice(i, 1);
+								i--;
+								tam--;
+						}
+					}
+
+					if(obstac.cor == "#ff0000"){
+						if (bloquinnho.x < obstac.x + obstac.LARGURA && bloquinnho.x + bloquinnho.largura >= obstac.x && bloquinnho.y + bloquinnho.altura >= chao.y - obstac.altura){
+							bloquinnho.pesoAumentado();
+							bloquinnho.tamnhador++;
+							this.obs.splice(i, 1);
+							i--;
+							tam--;
+						}
+					}
+
+					if (bloquinnho.x < obstac.x + obstac.LARGURA && bloquinnho.x > obstac.x && bloquinnho.y + bloquinnho.altura < chao.y - obstac.altura && bloquinnho.tamnhador == 0) {
+						bloquinnho.score++;
+						bloquinnho.tamnhador++;
+						speed+= 0.05;
+						ContadorSpeed += 0.05;
+					}
+
+					if (obstac.x <= -obstac.LARGURA) {
+						this.obs.splice(i, 1);
+						i--;
+						tam--;
+
+					}
+				}
+				if (bloquinnho.tamnhador >= 1) {
+					bloquinnho.tamnhador++;
+					if (bloquinnho.tamnhador == 20) {
+						bloquinnho.tamnhador = 0;
+					}
+				}
+
+			},
+
+			limpa: function(){
+				this.obs = [];
+			},
+
+			desenha: function(){
+				for (var i = 0, tam = this.obs.length; i < tam; i++) {
+					var obstac = this.obs[i];
+					ctx.fillStyle = obstac.cor;
+					if(obstac.cor == "#00aaff"){
+						ctx.drawImage(metal, 0, 0, 256, 256, obstac.x, chao.y - obstac.altura, obstac.LARGURA, obstac.altura);
+					}else if(obstac.cor =="#54ff00"){
+						ctx.drawImage(chaoBase2, 192, 64, 32, 32, obstac.x, chao.y - obstac.altura, obstac.LARGURA, obstac.altura);
+					}else if(obstac.cor == "#ff0000"){
+						ctx.drawImage(chaoBase2, 224, 64, 32, 32, obstac.x, chao.y - obstac.altura, obstac.LARGURA, obstac.altura);
+					}
+				}
+			}
+		}
+
+		var buffs = {
+
+			buf: [],
+			tipos: ["verde", "vermelho", "amarelo"], //"#54ff00","#ff0000","#fffa00"],//"#00ffe1"],
+			insericao: 3000, //3000
+			velocidade: 2,
+
+			inserir: function(){
+				this.buf.push({
+					x: Math.floor((largura -  (2 * 60)) * Math.random() + 60),
+					y: -55,
+					largura: 60,
+					altura: 60,
+					tipo: this.tipos[Math.floor(3 * Math.random())]
+				})
+				this.insericao = 3000; //3000
+			},
+
+			atualiza: function(){
+				if (this.insericao <= 0) {
+					this.inserir();
+				}else{this.insericao -= Math.floor(contadorN1 * Math.random() + 1) }// (0-9) + 1
+
+				for(var i = 0, tam = this.buf.length; i < tam; i++){
+					bufe = this.buf[i];
+
+					if (bufe.y >= chao.y + chao.alturA) {
+						this.buf.splice(i, 1);
+						i--;
+						tam--;
+					}
+
+					//buffs
+
+					if (bloquinnho.x + bloquinnho.largura >= bufe.x &&
+					bufe.x + bufe.largura >= bloquinnho.x &&
+					bufe.y + bufe.altura >= bloquinnho.y &&
+					bufe.y <= bloquinnho.y + bloquinnho.altura){
+
+						this.buf.splice(i, 1);
+						i--;
+						tam--;
+
+						if(bufe.tipo == "verde"){
+							bloquinnho.pesoLeve();
+						}else if(bufe.tipo == "vermelho"){
+							bloquinnho.pesoAumentado();
+						}else if(bufe.tipo == "amarelo"){
+							bloquinnho.velocimetro();
+						}
+					}
+
+					//limpando
+					if(bufe.y > altura - chaoTam){
+						this.buf.splice(i, 1);
+						i--;
+						tam--;
+					}
+
+					bufe.y += this.velocidade;
+					
+				}
+
+			},
+
+			desenha: function(){
+				for(var i = 0, tam = this.buf.length; i < tam; i++){
+					bufe = this.buf[i];
+					ctx.fillStyle = bufe.cor;
+					if(bufe.tipo == "verde"){
+						ctx.drawImage(pesoleveaumentadoimg, 0, 0, 32, 32, bufe.x, bufe.y, bufe.largura, bufe.altura);
+					}else if(bufe.tipo == "vermelho"){
+						ctx.drawImage(pesoleveaumentadoimg, 32, 0, 32, 32, bufe.x, bufe.y, bufe.largura, bufe.altura);
+					}else if(bufe.tipo == "amarelo"){
+						ctx.drawImage(velocimetroimg, 0, 0, 64, 64, bufe.x, bufe.y, bufe.largura, bufe.altura);
+					}
+				}
+			},
+
+			limpa: function(){
+				this.buf = [];
+			}
+
+		}
+
+		var projeteisAereos = {
+
+			aleatoridade: 0,
+			proj: [],
+			grav: 0.3,
+			tipos: ["invertedor", "meteoro"],
+
+			insere: function(){
+
+					this.proj.push({
+						x: Math.floor((centesimoLar*85 + this.aleatoridade) * Math.random() + centesimoLar*25),
+						y: -this.aleatoridade,
+						largura: this.aleatoridade,
+						altura: this.aleatoridade,
+						tipo: this.tipos[Math.floor(Math.random()*2)],
+						velocidadeGrav: 0,
+						velocidadex: speed/4 + Math.random()*speed*2,
+						contadorAnimaExplosion: 18
+					})
+			},
+
+			aleatoriador: function(){
+				if(mobileversion == false){
+					this.aleatoridade = 25 + Math.floor(Math.random()*101);
+				}else{this.aleatoridade = 10 + Math.floor(Math.random()*31)}
+			},
+
+			atualiza: function(){
+				//this.insere();
+
+				//inserção
+				if(contadorPrejeteisAereos <= 0){
+					contadorPrejeteisAereos = 600;
+					this.insere();
+				}else if(contadorPrejeteisAereos <= 600){
+					if(mobileversion == false){
+						contadorPrejeteisAereos-= (Math.floor(Math.random()*30))
+					}else{contadorPrejeteisAereos-= (Math.floor(Math.random()*8))}
+				}
+				
+				this.aleatoriador();
+				for(var i = 0, tam = this.proj.length; i < tam; i++){
+					var projetil = this.proj[i];
+
+					//gravidade dos meteoros
+					if(mobileversion == true) this.grav = 0.1;
+					projetil.velocidadeGrav += this.grav;
+					projetil.y += projetil.velocidadeGrav;
+
+					//velocidade horizontal dos meteoros
+					projetil.x -= projetil.velocidadex;
+					
+					//limpa
+						if(projetil.contadorAnimaExplosion <= 0){
+							i--;
+							tam--;
+						}
+						if(projetil.y + projetil.altura > altura - chaoTam){
+							projetil.y = altura - chaoTam - projetil.altura;
+							projetil.velocidadeGrav = 0;
+							projetil.velocidadex = 0;
+						}
+					//efeitos
+					if (bloquinnho.x + bloquinnho.largura >= projetil.x && 
+						projetil.x + projetil.largura >= bloquinnho.x && 
+						projetil.y + projetil.altura >= bloquinnho.y && 
+						projetil.y <= bloquinnho.y + bloquinnho.altura){
+
+							this.proj.splice(i, 1);
+							i--;
+							tam--;
+
+							if(projetil.tipo == "meteoro"){
+								estadoAtual = estados.perdeu;
+								morreaud.play()
+
+							}else if(projetil.tipo == "invertedor"){
+								bloquinnho.inverso();
+							}
+						}
+
+				}
+			},
+
+			desenha: function(){
+
+				for(var i = 0, tam = this.proj.length; i < tam; i++){
+					var projetil = this.proj[i];
+
+					if(projetil.velocidadex > 0){
+						if(projetil.tipo == "meteoro"){
+							ctx.drawImage(meteour, 32, 2, 15, 13, projetil.x, projetil.y, projetil.largura, projetil.altura);
+						}else if(projetil.tipo == "invertedor"){
+							ctx.drawImage(meteourinverso, 0, 0, 15, 13, projetil.x, projetil.y, projetil.largura, projetil.altura);
+						}
+					}
+
+					//explosões
+					if(projetil.velocidadex == 0){
+
+						//console.log(projetil.contadorAnimaExplosion);
+						//console.log(explosionaud1.ended, explosionaud2.ended, explosionaud3.ended);
+						if(projetil.contadorAnimaExplosion == 18){
+							if(explosionaud1.currentTime == 0 || explosionaud1.currentTime == 0.983583){
+								explosionaud1.play();
+							}else if(explosionaud2.currentTime == 0 || explosionaud2.currentTime == 0.983583){
+								explosionaud2.play();
+							}else if(explosionaud3.currentTime == 0 || explosionaud3.currentTime == 0.983583){
+								explosionaud3.play();
+							}
+						}
+
+						if(projetil.contadorAnimaExplosion <19 && projetil.contadorAnimaExplosion >15){
+							origemExplosionX = 0;
+						}else if(projetil.contadorAnimaExplosion <16 && projetil.contadorAnimaExplosion >12){
+							origemExplosionX = 32;
+						}else if(projetil.contadorAnimaExplosion <13 && projetil.contadorAnimaExplosion >9){
+							origemExplosionX = 64;
+						}else if(projetil.contadorAnimaExplosion <10 && projetil.contadorAnimaExplosion >6){
+							origemExplosionX = 96;
+						}else if(projetil.contadorAnimaExplosion <7 && projetil.contadorAnimaExplosion >3){
+							origemExplosionX = 128;
+						}else if(projetil.contadorAnimaExplosion <4 && projetil.contadorAnimaExplosion >0){
+							origemExplosionX = 160;
+						}
+
+						ctx.drawImage(explosionimg, origemExplosionX, origemExplosionY, explosionLargura, explosionAltura, projetil.x, projetil.y, projetil.largura, projetil.altura);
+
+						if(projetil.contadorAnimaExplosion <=0){
+							this.proj.splice(i, 1);
+							tam--;
+							i--;
+						}else{
+							projetil.contadorAnimaExplosion--;
+						}
+					}
+				}
+			},
+
+			limpa: function(){
+				this.proj = [];	
+			},
+		}
+
+		var megaObstaculos = {
+
+			velocidade: 12,
+			tipos: ["amarelo", "azul", "rosa"],  //["#fffa00", "#216583", "#ff00d0"], //"#ff0afa"
+			contadorN1: 8000, //15000
+			megaobstac: [],
+			velocidade: 5 + speed,
+
+			inserir: function(){
+				this.megaobstac.push({
+					x: largura,
+					Largura: 100,
+					altura: altura,
+					y: 0,
+					tipo: this.tipos[Math.floor(3 * Math.random())]
+				})
+				this.contadorN1 = 8000; //15000
+			},
+
+			atualiza: function(){
+				if (this.contadorN1 <= 0) {
+					if (contadorUMniversal == 0) {
+						this.inserir()
+					}
+				}else{this.contadorN1 -= Math.floor(20 * Math.random() + 1)} //20* mathrandom e +1;
+
+				for (var i = 0, tam = this.megaobstac.length; i < tam; i++) {
+					megaobs = this.megaobstac[i];
+
+					if (bloquinnho.x + bloquinnho.largura >= megaobs.x && megaobs.x + megaobs.Largura >= bloquinnho.x){
+						
+						this.megaobstac.splice(i, 1);
+						i--;
+						tam--;
+
+						if (megaobs.tipo == "azul")
+							bloquinnho.meteoros();
+						
+						if (megaobs.tipo == "amarelo") {
+							bloquinnho.velocimetro();
+						}
+						if (megaobs.tipo == "rosa"){
+							bloquinnho.rosaChok();
+						}
+					}
+
+					megaobs.x -= this.velocidade;
+				}
+
+			},
+
+			desenha: function(){
+				for (var i = 0, tam = this.megaobstac.length; i < tam; i++) {
+					megaobs = this.megaobstac[i];
+
+					if(megaobs.tipo == "amarelo"){
+						ctx.drawImage(colunamarelaimg, 0, 0, 100, 800, megaobs.x, megaobs.y, megaobs.Largura, megaobs.altura);
+						ctx.drawImage(velocimetroimg, 0, 0, 64, 64, megaobs.x, (altura - chaoTam)/2 -48, megaobs.Largura, 96);
+					}else if(megaobs.tipo == "azul"){
+						ctx.drawImage(colunameteourimg, 0, 0, 10, 80, megaobs.x, megaobs.y, megaobs.Largura, megaobs.altura);
+					}else if(megaobs.tipo == "rosa"){
+						ctx.drawImage(colunarosaimg, 0, 0, 512, 512, megaobs.x, megaobs.y, megaobs.Largura, megaobs.altura);
+					}
+				}
+			},
+
+			limpa: function(){
+				for (var i = 1, tam = this.megaobstac.length; i <= tam; i++){
+					this.megaobstac.splice(0, i);
+				}
+			}
+
+		}
+
+		var luaNomapa = {
+
+			atualiza: function(){
+				contluaY++;
+				if(contluaY == 1000){
+					contluaY = 0;
+				}
+
+				if(contluaY >= 0 && contluaY <=499){
+					luaY-=0.1;
+					
+				}else if(contluaY >=500 && contluaY <=999){
+					luaY+=0.1;
+				}
+
+				if(backgroundX + largura <= 0){
+					backgroundX = -3;
+				}
+			},
+
+			desenha: function(){
+				ctx.drawImage(lua, 0, 0, lua.width, lua.height, 7*centesimoLar + luaX, 8*centesimoAlt + luaY, 1.5*lua.width, 1.5*lua.height);
+			}
+		}
+
+		var inicialScreen = {
+
+			btnStartX: 30*centesimoLar -130,
+			btnStartY: 50*centesimoAlt - 65,
+			btnStartWidth: 130,
+			btnStartHeight: 130,
+			tela: 0,
+
+			btnsX: 80*centesimoLar - 190,
+			btnsLar: 190 ,
+			btnsAlt: 92,
+			btnCreditosY: 26*centesimoAlt, 
+			btnHomenagemY: 26*centesimoAlt +110, 
+			btnLojaY: 26*centesimoAlt + 220, 
+			btnOpcoesY: 26*centesimoAlt + 330,
+			
+			reseta: function(){
+
+				bloquinnho.x = 250;
+				bloquinnho.y = 0 - bloquinnho.altura;
+				bloquinnho.velocidadeGrav = 0;
+				bloquinnho.reset();
+				bloquinnho.score = 0;
+				bateuRecord = false;
+
+			},
+
+			mobileadaption: function(){
+
+				if(mobileversion == true){
+					this.btnCreditosY = 26*centesimoAlt;
+					this.btnHomenagemY = 26*centesimoAlt +50;
+					this.btnLojaY = 26*centesimoAlt +100;
+					this.btnOpcoesY = 26*centesimoAlt +150;
+					this.btnsAlt = 38;
+					this.btnsLar = 100;
+				} else{
+					this.btnsLar = 190;
+					this.btnsAlt = 92;
+					this.btnCreditosY = 26*centesimoAlt;
+					this.btnHomenagemY = 26*centesimoAlt +110;
+					this.btnLojaY = 26*centesimoAlt + 220;
+					this.btnOpcoesY = 26*centesimoAlt + 330;
+				}
+
+			},
+
+			clique: function(e){
+				cordX = e.pageX;
+				cordY = e.pageY;
+
+				if (this.tela == 0) {
+
+					if (cordX >= this.btnStartX && cordX <= this.btnStartX + this.btnStartWidth && cordY >= this.btnStartY && cordY <= this.btnStartY + this.btnStartHeight) {
+						estadoAtual = estados.jogando;
+						sondtrack.tomain();
+						continuetostatic = 1;
+					}
+					else if (cordX >= this.btnsX && cordX <= this.btnsX + this.btnsLar) {
+						if (cordY <= this.btnCreditosY + this.btnsAlt && cordY >= this.btnCreditosY) {
+							window.location.href = "creditos.html";
+						}
+						else if (cordY <= this.btnHomenagemY + this.btnsAlt && cordY >= this.btnHomenagemY) {
+							this.tela = 1;
+						}
+						else if (cordY <= this.btnLojaY + this.btnsAlt && cordY >= this.btnLojaY){
+							this.tela = 2;
+						}
+						else if (cordY <= this.btnOpcoesY + this.btnsAlt && cordY >= this.btnOpcoesY){
+							this.tela = 3;
+						}
+					}
+				} else{
+					if(cordX >= largura/2 - this.btnsLar/2 && cordX <= largura/2 + this.btnsLar/2 && cordY >= 3*centesimoAlt && cordY <= 3*centesimoAlt + this.btnsAlt){
+						this.tela = 0;
+					}
+
+					if(this.tela == 2){
+						if(cordX >= 15*centesimoLar + 12.448*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + 12.448*centesimoLar*(7/10) -15 + 8.177*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + 7.407*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + 7.407*centesimoAlt*(7/10) -15 + 17.572*centesimoAlt*(7/10)+30)
+							personagem = skins.warriorM;
+						else if(cordX >= 15*centesimoLar + (643/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (643/19.2)*centesimoLar*(7/10) -15 + (175/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (65/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (65/10.8)*centesimoAlt*(7/10) -15 + (219/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.rangerM;
+						else if(cordX >= 15*centesimoLar + (1057/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1057/19.2)*centesimoLar*(7/10) -15 + (179/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (69/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (69/10.8)*centesimoAlt*(7/10) -15 + (209/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.rangerF;
+						else if(cordX >= 15*centesimoLar + (1453/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1453/19.2)*centesimoLar*(7/10) -15 + (175/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (70/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (70/10.8)*centesimoAlt*(7/10) -15 + (217/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.ninjaM;
+						else if(cordX >= 15*centesimoLar + (227/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (227/19.2)*centesimoLar*(7/10) -15 + (216/10.8)*centesimoAlt*(7/10)+30
+						 && cordY >= 15*centesimoAlt + (410/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (410/10.8)*centesimoAlt*(7/10) -15 + (216/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.ninjaF;
+						else if(cordX >= 15*centesimoLar + (624/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (624/19.2)*centesimoLar*(7/10) -15 + (182/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (411/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (411/10.8)*centesimoAlt*(7/10) -15 + (216/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.mageM;
+						else if(cordX >= 15*centesimoLar + (1050/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1050/19.2)*centesimoLar*(7/10) -15 + (174/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (414/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (414/10.8)*centesimoAlt*(7/10) -15 + (216/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.mageF;
+						else if(cordX >= 15*centesimoLar + (1449/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1449/19.2)*centesimoLar*(7/10) -15 + (174/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (425/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (425/10.8)*centesimoAlt*(7/10) -15 + (216/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.healerM;
+						else if(cordX >= 15*centesimoLar + (223/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (223/19.2)*centesimoLar*(7/10) -15 + (181/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (760/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (760/10.8)*centesimoAlt*(7/10) -15 + (217/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.healerF;
+						else if(cordX >= 15*centesimoLar + (636/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (636/19.2)*centesimoLar*(7/10) -15 + (165/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (780/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (780/10.8)*centesimoAlt*(7/10) -15 + (201/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.warriorF;
+						else if(cordX >= 15*centesimoLar + (1042/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1042/19.2)*centesimoLar*(7/10) -15 + (181/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (767/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (767/10.8)*centesimoAlt*(7/10) -15 + (201/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.townfolkM;
+						else if(cordX >= 15*centesimoLar + (1445/19.2)*centesimoLar*(7/10) -15 && cordX <= 15*centesimoLar + (1445/19.2)*centesimoLar*(7/10) -15 + (174/19.2)*centesimoLar*(7/10) +30
+						 && cordY >= 15*centesimoAlt + (743/10.8)*centesimoAlt*(7/10) -15 && cordY <= 15*centesimoAlt + (743/10.8)*centesimoAlt*(7/10) -15 + (205/10.8)*centesimoAlt*(7/10)+30)
+							personagem = skins.townfolkF;
+						
+					}
+
+					if(this.tela == 3){
+
+						if(cordX >= centesimoLar*56 && cordX <= centesimoLar*56 + centesimoLar*13 && cordY >= centesimoAlt*25 && cordY <= centesimoAlt*25 + centesimoAlt*10){
+							if(ativemusic == true){
+								ativemusic = false;
+								trilhaRosa.muted = true;
+								trilhaMeteour.muted = true;
+								trilharepet.muted = true;
+								trilhasonora.muted = true;
+							}else{
+								ativemusic = true;
+								trilhaRosa.muted = false;
+								trilhaMeteour.muted = false;
+								trilharepet.muted = false;
+								trilhasonora.muted = false;
+								
+							}
+						}else if(cordX >= centesimoLar*56 && cordX <= centesimoLar*56 + centesimoLar*13 && cordY >= centesimoAlt*40 && cordY <= centesimoAlt*40 + centesimoAlt*10){
+
+							if(ativesounds == true){
+								ativesounds = false;
+								puloaud.muted = true;
+								morreaud.muted = true;
+								velocimetroaud.muted = true;
+								grenbuffaud.muted = true;
+								redbuffaud.muted = true;
+								explosionaud1.muted = true;
+								explosionaud2.muted = true;
+								explosionaud3.muted = true;
+							}else{
+								ativesounds = true;
+								puloaud.muted = false;
+								morreaud.muted = false;
+								velocimetroaud.muted = false;
+								grenbuffaud.muted = false;
+								redbuffaud.muted = false;
+								explosionaud1.muted = false;
+								explosionaud2.muted = false;
+								explosionaud3.muted = false;
+							}
+
+						}else if(cordX >= centesimoLar*56 && cordX <= centesimoLar*56 + centesimoLar*13 && cordY >= centesimoAlt*55 && cordY <= centesimoAlt*55 + centesimoAlt*10){
+							if(mobileversion == false){
+								mobileversion = true;
+							}else{mobileversion = false}
+						}
+
+						ctx.fillRect(centesimoLar*56, centesimoAlt*25 , centesimoLar*13, centesimoAlt*10);
+						ctx.fillRect(centesimoLar*56, centesimoAlt*25 + centesimoAlt*15 , centesimoLar*13, centesimoAlt*10);
+						ctx.fillRect(centesimoLar*56, centesimoAlt*25 + centesimoAlt*30 , centesimoLar*13, centesimoAlt*10);
+
+					}
+				}
+			},
+
+			desenha: function(){
+
+				
+				ctx.fillStyle = "rgba(22, 53, 255, 0.9)";
+				ctx.fillRect(15*centesimoLar, 15*centesimoAlt, 70*centesimoLar, 70*centesimoAlt);
+				//ctx.fillRect(0,0,largura,altura);
+
+				if (this.tela == 0) {
+					this.mobileadaption();
+					ctx.fillStyle = "rgb(40, 149, 0)";
+					ctx.fillRect(this.btnStartX + 10, this.btnStartY + 10, this.btnStartWidth, this.btnStartHeight);
+					ctx.fillStyle = "#4f0";
+					ctx.fillRect(this.btnStartX, this.btnStartY, this.btnStartWidth, this.btnStartHeight);
+					ctx.fillStyle = "rgb(8, 131, 119)";
+					ctx.fillRect(this.btnsX + 8, this.btnCreditosY + 8, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX + 8, this.btnHomenagemY + 8, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX + 8, this.btnLojaY + 8, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX + 8, this.btnOpcoesY + 8, this.btnsLar, this.btnsAlt);
+					ctx.fillStyle = "#0eedd6";
+					ctx.fillRect(this.btnsX, this.btnCreditosY, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX, this.btnHomenagemY, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX, this.btnLojaY, this.btnsLar, this.btnsAlt);
+					ctx.fillRect(this.btnsX, this.btnOpcoesY, this.btnsLar, this.btnsAlt);
+
+					ctx.fillStyle = "#fff";
+
+					if(mobileversion == true){
+						ctx.font = "25px Azonix"
+					}else{ctx.font = "36px Azonix";}
+
+					ctx.textAlign = "center";
+					ctx.fillText("Start", 30*centesimoLar -65, altura/2 + 15);
+
+					if(mobileversion == true){
+						ctx.font = "15px Azonix"
+					}else{ctx.font = "25px Azonix"}
+
+					if(mobileversion == false){
+						ctx.fillText("Credits", this.btnsX + this.btnsLar/2, this.btnCreditosY + this.btnsAlt/2 + 12);
+						ctx.fillText("How to play", this.btnsX + this.btnsLar/2, this.btnHomenagemY + this.btnsAlt/2 + 12);
+						ctx.fillText("skins", this.btnsX + this.btnsLar/2, this.btnLojaY + this.btnsAlt/2 + 12);
+						ctx.fillText("Options", this.btnsX + this.btnsLar/2, this.btnOpcoesY + this.btnsAlt/2 +12);
+					}else{
+						ctx.fillText("Credits", this.btnsX + this.btnsLar/2, this.btnCreditosY + this.btnsAlt/2 + 7);
+						ctx.fillText("How to play", this.btnsX + this.btnsLar/2, this.btnHomenagemY + this.btnsAlt/2 + 7);
+						ctx.fillText("skins", this.btnsX + this.btnsLar/2, this.btnLojaY + this.btnsAlt/2 + 7);
+						ctx.fillText("Options", this.btnsX + this.btnsLar/2, this.btnOpcoesY + this.btnsAlt/2 + 7);
+					}
+				}
+				else if(this.tela == 1) {
+					ctx.drawImage(HtP, 0, 0, 1920, 1080, 15*centesimoLar, 15*centesimoAlt, 70*centesimoLar, 70*centesimoAlt);
+					ctx.fillStyle = "#0eedd6";
+					ctx.fillRect(largura/2 - this.btnsLar/2, 3*centesimoAlt, this.btnsLar, this.btnsAlt);
+
+					ctx.font = "36px Azonix";
+					ctx.fillStyle = "#fff";
+					ctx.fillText("Back", largura/2, 9*centesimoAlt);
+				} else if(this.tela == 2){
+					ctx.fillStyle = "#0eedd6";
+					ctx.fillRect(largura/2 - this.btnsLar/2, 3*centesimoAlt, this.btnsLar, this.btnsAlt);
+
+					if(personagem == skins.warriorM){
+						ctx.fillRect(15*centesimoLar + 12.448*centesimoLar*(7/10) -15, 15*centesimoAlt + 7.407*centesimoAlt*(7/10) -15, 8.177*centesimoLar*(7/10) +30, 17.572*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.rangerM){
+						ctx.fillRect(15*centesimoLar + (643/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (65/10.8)*centesimoAlt*(7/10) -15, (175/19.2)*centesimoLar*(7/10) +30, (219/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.rangerF){
+						ctx.fillRect(15*centesimoLar + (1057/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (69/10.8)*centesimoAlt*(7/10) -15, (179/19.2)*centesimoLar*(7/10) +30, (209/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.ninjaM){
+						ctx.fillRect(15*centesimoLar + (1453/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (70/10.8)*centesimoAlt*(7/10) -15, (175/19.2)*centesimoLar*(7/10) +30, (217/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.ninjaF){
+						ctx.fillRect(15*centesimoLar + (227/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (410/10.8)*centesimoAlt*(7/10) -15, (175/19.2)*centesimoLar*(7/10) +30, (216/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.mageM){
+						ctx.fillRect(15*centesimoLar + (624/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (411/10.8)*centesimoAlt*(7/10) -15, (182/19.2)*centesimoLar*(7/10) +30, (216/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.mageF){
+						ctx.fillRect(15*centesimoLar + (1050/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (414/10.8)*centesimoAlt*(7/10) -15, (174/19.2)*centesimoLar*(7/10) +30, (216/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.healerM){
+						ctx.fillRect(15*centesimoLar + (1449/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (425/10.8)*centesimoAlt*(7/10) -15, (174/19.2)*centesimoLar*(7/10) +30, (216/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.healerF){
+						ctx.fillRect(15*centesimoLar + (223/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (760/10.8)*centesimoAlt*(7/10) -15, (181/19.2)*centesimoLar*(7/10) +30, (217/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.warriorF){
+						ctx.fillRect(15*centesimoLar + (636/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (780/10.8)*centesimoAlt*(7/10) -15, (165/19.2)*centesimoLar*(7/10) +30, (201/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.townfolkM){
+						ctx.fillRect(15*centesimoLar + (1042/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (767/10.8)*centesimoAlt*(7/10) -15, (181/19.2)*centesimoLar*(7/10) +30, (201/10.8)*centesimoAlt*(7/10)+30);
+					}else if(personagem == skins.townfolkF){
+						ctx.fillRect(15*centesimoLar + (1445/19.2)*centesimoLar*(7/10) -15, 15*centesimoAlt + (743/10.8)*centesimoAlt*(7/10) -15, (174/19.2)*centesimoLar*(7/10) +30, (205/10.8)*centesimoAlt*(7/10)+30);
+					}
+
+					ctx.font = "36px Azonix";
+					ctx.fillStyle = "#fff";
+					ctx.fillText("Back", largura/2, 9*centesimoAlt);
+
+					ctx.drawImage(skinsimg, 0, 0, 1920, 1080, 15*centesimoLar, 15*centesimoAlt, 70*centesimoLar, 70*centesimoAlt)
+				} else if(this.tela == 3){
+					ctx.fillStyle = "#0eedd6";
+					ctx.fillRect(largura/2 - this.btnsLar/2, 3*centesimoAlt, this.btnsLar, this.btnsAlt);
+
+					ctx.fillRect(centesimoLar*56, centesimoAlt*25 , centesimoLar*13, centesimoAlt*10);
+					ctx.fillRect(centesimoLar*56, centesimoAlt*25 + centesimoAlt*15 , centesimoLar*13, centesimoAlt*10);
+					ctx.fillRect(centesimoLar*56, centesimoAlt*25 + centesimoAlt*30 , centesimoLar*13, centesimoAlt*10);
+
+					ctx.font = "36px Azonix";
+					ctx.fillStyle = "#fff";
+					ctx.fillText("Back", largura/2, 9*centesimoAlt);
+
+					if(ativesounds == true){
+						ctx.fillText("on", centesimoLar*62, centesimoAlt*46);
+					} else{ctx.fillText("off", centesimoLar*62, centesimoAlt*46)}
+					
+					if(ativemusic == true){
+						ctx.fillText("on", centesimoLar*62, centesimoAlt*31);
+					} else{ctx.fillText("off", centesimoLar*62, centesimoAlt*31)}
+
+					if(mobileversion == true){
+						ctx.fillText("on", centesimoLar*62, centesimoAlt*61);
+					} else{ctx.fillText("off", centesimoLar*62, centesimoAlt*61)}
+					
+					if(mobileversion == false){
+						ctx.font = "45px Azonix";
+						ctx.fillText("Music:", centesimoLar*56 -22.5*6, centesimoAlt*31);
+						ctx.fillText("Sound effects:", centesimoLar*56 -22.5*13, centesimoAlt*47);
+						ctx.fillText("Mobile:", centesimoLar*56 - 22.5*7, centesimoAlt*62);
+					}else{
+						ctx.font = "23px Azonix";
+						ctx.fillText("Music:", centesimoLar*56 -11.5*6, centesimoAlt*31);
+						ctx.fillText("Sound effects:", centesimoLar*56 -11.5*13, centesimoAlt*47);
+						ctx.fillText("Mobile:", centesimoLar*56 - 11.5*7, centesimoAlt*62);
+					}
+					
+				}
+			},
+			funciona: function(){
+				this.desenha();
+				this.reseta();
+			}
+		}
+
+		var movbtns = {
+
+			btnpular: {
+				X: 3*centesimoLar,
+				Y: 90*centesimoAlt - 35,
+				lar: 100,
+				alt: 60
+			},
+
+			btndown: {
+				X: 3*centesimoLar + 160,
+				Y: 90*centesimoAlt - 35,
+				lar: 100,
+				alt: 60
+			},
+
+			btnmovesquerda: {
+				X: largura - 3*centesimoLar - 200,
+				Y: 90*centesimoAlt - 35,
+				lar: 100,
+				alt: 60
+			},
+
+			btnmovdireita: {
+				X: largura - 3*centesimoLar - 80,
+				Y: 90*centesimoAlt - 35,
+				lar: 100,
+				alt: 60
+			},
+
+			desenha: function(){
+
+				if(mobileversion == true && estadoAtual == estados.jogando){
+					ctx.drawImage(btnjumpimg, 0, 0, 242, 66, this.btnpular.X, this.btnpular.Y, this.btnpular.lar, this.btnpular.alt);
+					ctx.drawImage(btndownimg, 0, 0, 252, 60, this.btndown.X, this.btndown.Y, this.btndown.lar, this.btndown.alt);
+					ctx.drawImage(btnleftarrowimg, 0, 0, 270, 102, this.btnmovesquerda.X, this.btnmovesquerda.Y, this.btnmovesquerda.lar, this.btnmovesquerda.alt);
+					ctx.drawImage(btnrightarrow, 0, 0, 264, 96, this.btnmovdireita.X, this.btnmovdireita.Y, this.btnmovdireita.lar, this.btnmovdireita.alt);
+				}
+			}
+
+		}
+
+		var sondtrack = {
+
+			tometeours: function(){
+				clearInterval(contadornovo1);
+				clearInterval(contadornovo2);
+
+				//trilhaMeteour.volume = 0;
+				trilhaMeteour.play();
+				
+				contadornovo1 = setInterval(() => {
+					if(trilhaMeteour.volume <= 0.9){
+						trilhaMeteour.volume += 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo1);
+				}, 3000);
+			},
+
+			outmeteours: function(){
+				clearInterval(contadornovo1);
+				clearInterval(contadornovo2);	
+				
+				//trilhaMeteour.volume = 1;
+
+				contadornovo2 = setInterval(() => {
+					if(trilhaMeteour.volume >= 0.1){
+						trilhaMeteour.volume -= 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo2)
+						trilhaMeteour.pause();
+				}, 3000);
+			},
+
+			torosa: function(){
+				clearInterval(contadornovo3);
+				clearInterval(contadornovo4);
+
+				//trilhaRosa.volume = 0;
+				trilhaRosa.play();
+
+				contadornovo3 = setInterval(() => {
+					if(trilhaRosa.volume <=0.9){
+						trilhaRosa.volume += 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo3);
+				}, 3000);
+			},
+
+			outrosa: function(){
+				clearInterval(contadornovo3);
+				clearInterval(contadornovo4);
+
+				//trilhaRosa.volume = 1;
+				
+				contadornovo4 = setInterval(() => {
+					if(trilhaRosa.volume >= 0.1){
+						trilhaRosa.volume -= 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo4);
+						trilhaRosa.pause();
+				}, 3000);
+			},
+
+			tomain: function(){
+				clearInterval(contadornovo5);
+				clearInterval(contadornovo6);
+
+				//trilhasonora.volume = 0;
+				//trilharepet.volume = 0;
+				if(trilhasonora.ended == true){
+					trilharepet.play()
+				}else{trilhasonora.play()}
+
+				contadornovo5 = setInterval(() => {
+					if(trilharepet.volume <= 0.9 && trilhasonora.volume <= 0.9){
+						trilhasonora.volume += 0.1;
+						trilharepet.volume += 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo5);
+				}, 3000);
+			},
+
+			outmain: function(){
+				clearInterval(contadornovo5);
+				clearInterval(contadornovo6);
+
+				//trilharepet.volume = 1;
+				//trilhasonora.volume = 1;
+
+				contadornovo6 = setInterval(() => {
+					if(trilharepet.volume >= 0.1 && trilhasonora.volume >= 0.1){
+						trilhasonora.volume -= 0.1;
+						trilharepet.volume -= 0.1;
+					}
+				}, 300);
+
+				setTimeout(() => {
+					clearInterval(contadornovo6);
+					if(trilhasonora.volume == 0 && trilharepet.volume == 0){
+						trilhasonora.pause();
+						trilharepet.pause();
+					}
+				}, 3000);
+			}
+
+		}
+
+		// funções do jogo
+		 function keydownHandler(e){
+
+			if(e.type == 'keydown'){
+				var key = e.keyCode;
+
+				if(key === UP) bloquinnho.pula();	
+				if(key === LEFT && key !== RIGHT) moveEsquerda = true;
+				if(key === RIGHT && key !== LEFT) moveDireita = true;
+				if(key === DOWN && key !== UP) moveBaixo = true;
+
+			}else{
+
+				for(i = 0, tam = e.touches.length; i < tam; i++){
+					let toq = e.touches[i];
+					//touchev = toq;
+
+					//alert(e.touches[0].pageX);
+					if(toq.pageX >= movbtns.btnpular.X && toq.pageX <= movbtns.btnpular.X + movbtns.btnpular.lar && 
+					toq.pageY >= movbtns.btnpular.Y && toq.pageY <= movbtns.btnpular.Y + movbtns.btnpular.alt){
+						bloquinnho.pula();
+						touchtop = true;
+					} 
+
+					if(toq.pageX >= movbtns.btndown.X && toq.pageX <= movbtns.btndown.X + movbtns.btndown.lar &&
+					toq.pageY >= movbtns.btndown.Y && toq.pageY <= movbtns.btndown.Y + movbtns.btndown.alt){
+						moveBaixo = true;
+						toouchbot = true;
+					} 
+					if(toq.pageX >= movbtns.btnmovesquerda.X && toq.pageX <= movbtns.btnmovesquerda.X + movbtns.btnmovesquerda.lar &&
+					toq.pageY >= movbtns.btnmovesquerda.Y && toq.pageY <= movbtns.btnmovesquerda.Y + movbtns.btnmovesquerda.alt){
+						moveEsquerda = true;
+					} 
+					if(toq.pageX >= movbtns.btnmovdireita.X && toq.pageX <= movbtns.btnmovdireita.X + movbtns.btnmovdireita.lar &&
+					toq.pageY >= movbtns.btnmovdireita.Y && toq.pageY <= movbtns.btnmovdireita.Y + movbtns.btnmovdireita.alt){
+						moveDireita = true;
+					}
+				}
+
+			}
+
+		}
+
+		function keyupHandler(e){
+
+			if(e.type == 'keyup'){
+				var key = e.keyCode;
+		
+				if(key === LEFT && key !== RIGHT){
+					moveEsquerda = false;
+				}
+				if(key === RIGHT && key !== LEFT){
+					moveDireita = false;
+				}
+				if(key === DOWN && key !== UP){
+					moveBaixo = false;
+				}
+			}else{
+				
+				//if(touchev.pageX >= movbtns.btndown.X && touchev.pageX <= movbtns.btndown.X + movbtns.btndown.lar &&
+				//touchev.pageY >= movbtns.btndown.Y && touchev.pageY <= movbtns.btndown.Y + movbtns.btndown.alt){
+					
+					moveBaixo = false;
+				//} 
+				//if(touchev.pageX >= movbtns.btnmovesquerda.X && touchev.pageX <= movbtns.btnmovesquerda.X + movbtns.btnmovesquerda.lar &&
+				//touchev.pageY >= movbtns.btnmovesquerda.Y && touchev.pageY <= movbtns.btnmovesquerda.Y + movbtns.btnmovesquerda.alt){
+				if(touchtop == false){
+					if(toouchbot == false){
+						moveEsquerda = false;
+						moveDireita = false;
+					}else{toouchbot = false}
+				}else{touchtop = false}
+				//} 
+				//if(touchev.pageX >= movbtns.btnmovdireita.X && touchev.pageX <= movbtns.btnmovdireita.X + movbtns.btnmovdireita.lar &&
+				//touchev.pageY >= movbtns.btnmovdireita.Y && touchev.pageY <= movbtns.btnmovdireita.Y + movbtns.btnmovdireita.alt){
+				//}
+
+			}
+		}
+
+		function move(){
+			if(moveEsquerda && estadoAtual == estados.jogando){
+				bloquinnho.x-= bloquinnho.velocidade;
+			}
+			if(moveDireita && estadoAtual == estados.jogando){
+				bloquinnho.x+= bloquinnho.velocidade;
+			}
+			if(moveBaixo && estadoAtual == estados.jogando){
+				bloquinnho.y+= 6;
+			}
+		}
+
+		function jogo(){
+
+			altura = window.innerHeight - 2;
+			largura = window.innerWidth - 5;
+
+			 if (largura <= 800) {
+			 	mobileversion = true;
+			 }else{mobileversion = false}
+
+			cnv = document.createElement('canvas');
+			ctx = cnv.getContext('2d');
+			cnv.width = largura;
+			cnv.height = altura;
+			cnv.style.border = "1px solid #000";
+
+			personagem = skins.warriorM;
+
+			imagemBase = new Image();
+			imagemBase.src = "Imagens/ImagemSprite.png";
+			background = new Image();
+			background.src = "Imagens/nightsemlua.png";
+			muroBase = new Image();
+			muroBase.src = "Imagens/paredezinha.png";
+			metal = new Image();
+			metal.src = "Imagens/metal.png";
+			chaoBase2 = new Image();
+			chaoBase2.src = "Imagens/floor_tiles.png";
+			lua = new Image();
+			lua.src = "Imagens/lua.png";
+			meteour = new Image();
+			meteour.src = "Imagens/spacial_sprites.png";
+			meteourinverso = new Image();
+			meteourinverso.src = "Imagens/meteoroverde.png";
+			pesoleveaumentadoimg = new Image();
+			pesoleveaumentadoimg.src = "Imagens/pesoleveaumentado.png";
+			velocimetroimg = new Image();
+			velocimetroimg.src = "Imagens/buff_speed.png";
+			colunamarelaimg = new Image();
+			colunamarelaimg.src = "Imagens/coluna_amarela.png";
+			colunameteourimg = new Image();
+			colunameteourimg.src = "Imagens/colunameteoros.png";
+			colunarosaimg = new Image();
+			colunarosaimg.src = "Imagens/rosinha.png";
+			explosionimg = new Image();
+			explosionimg.src = "Imagens/explosion.png";
+			HtP = new Image();
+			HtP.src = "Imagens/instructions.png";
+			skinsimg = new Image();
+			skinsimg.src = "Imagens/sprites/skins.png";
+			rangerMimg = new Image();
+			rangerMimg.src = "Imagens/sprites/ranger_m.png";
+			rangerFimg = new Image();
+			rangerFimg.src = "Imagens/sprites/ranger_f.png";
+			warriorFimg = new Image();
+			warriorFimg.src = "Imagens/sprites/warrior_f.png";
+			ninjaMimg = new Image();
+			ninjaMimg.src = "Imagens/sprites/ninja_m.png";
+			ninjaFimg = new Image();
+			ninjaFimg.src = "Imagens/sprites/ninja_f.png";
+			mageMimg = new Image();
+			mageMimg.src = "Imagens/sprites/mage_m.png";
+			mageFimg = new Image();
+			mageFimg.src = "Imagens/sprites/mage_f.png";
+			healerMimg = new Image();
+			healerMimg.src = "Imagens/sprites/healer_m.png";
+			healerFimg = new Image();
+			healerFimg.src = "Imagens/sprites/healer_f.png";
+			townfolkMimg = new Image();
+			townfolkMimg.src = "Imagens/sprites/townfolk1_m.png";
+			townfolkFimg = new Image();
+			townfolkFimg.src = "Imagens/sprites/townfolk1_f.png";
+			btndownimg = new Image(), btnjumpimg = new Image(), btnleftarrowimg = new Image(), btnrightarrow = new Image();
+			btndownimg.src = "Imagens/down.png";
+			btnjumpimg.src = "Imagens/jump.png";
+			btnleftarrowimg.src = "Imagens/leftarrow.png";
+			btnrightarrow.src = "Imagens/rightarrow.png";
+			
+			
+			
+
+			trilhasonora = new Audio();
+			trilhasonora.src = "Audios/trilhason.mp3";
+			trilhasonora.volume = 1;
+			trilharepet = new Audio();
+			trilharepet.src = "Audios/trilharepet.mp3";
+			trilharepet.loop = true;
+			puloaud = new Audio();
+			puloaud.src = "Audios/pulo.mp3";
+			puloaud.volume = 0.4;
+			morreaud = new Audio();
+			morreaud.src = "Audios/hown.mp3";
+			velocimetroaud = new Audio();
+			velocimetroaud.src = "Audios/energybuff.ogg";
+			grenbuffaud = new Audio();
+			grenbuffaud.src = "Audios/greenbuff.flac";
+			redbuffaud = new Audio();
+			redbuffaud.src = "Audios/redbuff.flac";
+			trilhaRosa = new Audio();
+			trilhaRosa.src = "Audios/rosaChok.mp3";
+			trilhaRosa.volume = 0;
+			trilhaMeteour = new Audio();
+			trilhaMeteour = new Audio();
+			trilhaMeteour.src = "Audios/meteours.mp3";
+			trilhaMeteour.volume = 0;
+			explosionaud1 = new Audio();
+			explosionaud1.src = "Audios/explosion.wav";
+			explosionaud1.volume = 0.4
+			explosionaud2 = new Audio();
+			explosionaud2.src = "Audios/explosion.wav";
+			explosionaud2.volume = 0.4
+			explosionaud3 = new Audio();
+			explosionaud3.src = "Audios/explosion.wav";
+			explosionaud3.volume = 0.4
+
+			document.body.appendChild(cnv);
+			document.addEventListener("keydown", keydownHandler, false);
+			document.addEventListener("keyup", keyupHandler, false);
+			document.addEventListener("mousedown", trocaestado, false);
+			document.addEventListener("touchstart", trocaestado, false);
+			document.addEventListener("touchstart", keydownHandler, false);
+			document.addEventListener("touchend", keyupHandler, false);
+
+			trilhasonora.addEventListener("ended", () => {
+				trilharepet.play();
+			}, false)
+
+			estadoAtual = estados.jogar;
+
+			record = localStorage.getItem("record");
+			if (record == null) {
+				record = 0;
+			}
+			render();
+		}
+
+		function render(){
+			atualiza();
+			draw();
+			move();
+			cadaEstado();
+
+			window.requestAnimationFrame(render);
+		}
+
+		function atualiza(){
+
+			bloquinnho.atualiza();
+			luaNomapa.atualiza();
+
+			if (estadoAtual == estados.jogando) {	
+				obstaculos.atualiza();
+				buffs.atualiza();
+				megaObstaculos.atualiza();
+				projeteisAereos.atualiza();
+			}
+
+			//(contadorUMniversal)
+		if (contadorUMniversal > 0)
+			contadorUMniversal--;
+		}
+
+		function draw(){
+			backgroundX -=speed/2;
+			ctx.drawImage(background, 0, 0, background.width, background.height, backgroundX, 0, largura, altura);
+			ctx.drawImage(background, 0, 0, background.width, background.height, backgroundX + largura -2, 0, largura, altura);
+
+			luaNomapa.desenha();
+			bloquinnho.desenha();
+			obstaculos.desenha();
+			megaObstaculos.desenha();
+			buffs.desenha();
+			chao.desenha();
+			projeteisAereos.desenha();
+			movbtns.desenha();
+			//projeteisAereos.explosion();
+		}
+		function cadaEstado(){
+
+			if (estadoAtual == estados.jogar) {
+				inicialScreen.funciona();
+			}
+			if(estadoAtual == estados.perdeu){
+				if(continuetostatic == 1){
+					continuetostatic--;
+					bloquinnho.morreu();
+				} 
+
+				//tela de perdeu
+				ctx.fillStyle = "#9a2828";
+				ctx.fillRect(btnVermelhoX + 10, btnVermelhoY + 10, btnVermelhoLar, btnVermelhoAlt);
+				ctx.fillStyle = "#f44";
+				ctx.fillRect(btnVermelhoX, btnVermelhoY, btnVermelhoLar, btnVermelhoAlt)
+
+				//score desenhado
+
+				ctx.fillStyle = "#fff";
+				ctx.textAlign = "center";
+				ctx.fillText(bloquinnho.score, largura/2, altura/2 + 30);
+
+				if (bateuRecord == true) {
+					ctx.fillText("Novo recorde!", largura/2, altura/2 - altura/6);
+				}else{
+					ctx.fillText("Best: " + record, largura/2, altura/2 + altura/5);
+				}
+
+				ctx.textAlign = "left";
+
+				if (this.score > record) {
+					localStorage.setItem("record", this.score);
+					record = this.score;
+					bateuRecord = true;
+				}
+			}
+			if (estadoAtual == estados.jogando) {
+
+				//score aparecendo
+				ctx.textAlign = "left";
+				ctx.fillStyle = "#fff";
+				ctx.font = "80px Roboto";
+				ctx.fillText(Math.floor(bloquinnho.score), 15, 75);
+				//quantidade de pulos aparecendo
+				ctx.fillText(maximoDePulos - bloquinnho.qntPulos, largura - largura/20, 75);
+
+				ctx.fillStyle = "#";
+
+			}
+		}
+
+		function trocaestado(e){
+
+				cordX = e.pageX;
+				cordY = e.pageY;
+
+			if(estadoAtual == estados.jogar){
+				inicialScreen.clique(e);
+			}else if(estadoAtual == estados.perdeu){
+				if(cordX >= btnVermelhoX && cordX <= btnVermelhoX + btnVermelhoLar && cordY >= btnVermelhoY && cordY <= btnVermelhoY + btnVermelhoAlt){
+					estadoAtual = estados.jogar;
+				}
+			}
+		}
+
+		jogo();
+	</script>
+</body>
+</html>
